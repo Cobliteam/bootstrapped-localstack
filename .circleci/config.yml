@@ -1,0 +1,50 @@
+version: 2.1
+
+definitions:
+  release_tag: &release_tag /^[0-9]+\.[0-9]+\.[0-9]+$/
+  image_name: &image_name cobli/bootstraped-localstack
+  docker-publish-commons: &docker-publish-commons
+    image: *image_name
+    extra_build_args: --build-arg LOCALSTACK_VERSION=$LOCALSTACK_VERSION
+
+workflows:
+  build-and-publish-docker-image:
+    jobs:
+      - docker/hadolint
+      - build-only:
+          filters:
+            branches:
+              ignore: /^master$/
+            tags:
+              ignore: *release_tag
+          requires:
+            - docker/hadolint
+      - docker/publish:
+          <<: *docker-publish-commons
+          tag: $LOCALSTACK_VERSION
+          filters:
+            branches:
+              only: /^master$/            
+          requires:
+            - docker/hadolint
+      - docker/publish:
+          <<: *docker-publish-commons
+          tag: $LOCALSTACK_VERSION-$CIRCLE_TAG
+          filters:
+            branches:
+              ignore: /^.*$/            
+            tags:
+              only: *release_tag
+          requires:
+            - docker/hadolint
+
+jobs:
+  build-only:
+    executor: docker/machine
+    steps:
+      - checkout
+      - docker/build:
+          image: *image_name
+
+orbs:
+  docker: circleci/docker@0.5.13
