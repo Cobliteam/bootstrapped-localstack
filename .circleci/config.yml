@@ -2,7 +2,7 @@ version: 2.1
 
 definitions:
   release_tag: &release_tag /^[0-9]+\.[0-9]+\.[0-9]+$/
-  image_name: &image_name cobli/bootstraped-localstack
+  image_name: &image_name cobli/bootstrapped-localstack
   docker-publish-commons: &docker-publish-commons
     image: *image_name
     extra_build_args: --build-arg LOCALSTACK_VERSION=$LOCALSTACK_VERSION
@@ -11,7 +11,10 @@ definitions:
 workflows:
   build-and-publish-docker-image:
     jobs:
-      - docker/hadolint
+      - docker/hadolint:
+          filters:
+            tags:
+              only: *release_tag
       - build-only:
           filters:
             branches:
@@ -33,7 +36,7 @@ workflows:
           tag: $LOCALSTACK_VERSION-$CIRCLE_TAG
           filters:
             branches:
-              ignore: /^.*$/
+              ignore: /.*/
             tags:
               only: *release_tag
           requires:
