@@ -6,6 +6,7 @@ definitions:
   docker-publish-commons: &docker-publish-commons
     image: *image_name
     extra_build_args: --build-arg LOCALSTACK_VERSION=$LOCALSTACK_VERSION
+    context: coblicd-dockerhub-login
 
 workflows:
   build-and-publish-docker-image:
@@ -24,7 +25,7 @@ workflows:
           tag: $LOCALSTACK_VERSION
           filters:
             branches:
-              only: /^master$/            
+              only: /^master$/
           requires:
             - docker/hadolint
       - docker/publish:
@@ -32,7 +33,7 @@ workflows:
           tag: $LOCALSTACK_VERSION-$CIRCLE_TAG
           filters:
             branches:
-              ignore: /^.*$/            
+              ignore: /^.*$/
             tags:
               only: *release_tag
           requires:
